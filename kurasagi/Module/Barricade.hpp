@@ -28,23 +28,20 @@ namespace wsbp {
 		 * @details Inject it directly to IDT so we can handle it.
 		 * @returns `TRUE` if operation was successful, `FALSE` otherwise.
 		 */
-		VOID InjectCustomInterruptHandler();
-		BOOLEAN InjectCustomInterruptHandlerIdPc(KDPC* Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2);
+		BOOLEAN InjectCustomInterruptHandler();
 
 		/*
 		 * @brief Desiring custom NX fault handler.
-		 * @returns `TRUE` if could handled. `FALSE` otherwise. the wrapout routine is `HkMmAccessFault`.
+		 * @returns `TRUE` if handled. `FALSE` otherwise. the wrapout routine is `HkMmAccessFault`.
 		 */
 		BOOLEAN CustomNxFaultHandler(void* faultAddress, PKTRAP_FRAME trapFrame);
+		extern NTSTATUS(NTAPI* OrigMmAccessFault)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID);
 		NTSTATUS NTAPI HkMmAccessFault(
 			_In_ ULONG FaultCode,
 			_In_ PVOID Address,
 			_In_ KPROCESSOR_MODE Mode,
 			_In_ PVOID TrapInformation
 		);
-
-		// Used to be store trampoline shellcode. max 32 bytes.
-		void TrampolineArea();
 
 		/*
 		 * @brief Setup Barricade.

@@ -98,6 +98,19 @@ UINT64* GetPageTableEntryPointer(PVOID v, size_t level) {
 	return ptePointer;
 }
 
+UINT64* GetLastPageTableEntryPointer(PVOID v) {
+
+	UINT64* pte = NULL;
+	for (size_t level = 4; level > 0; level--) {
+		pte = GetPageTableEntryPointer(v, level);
+		if (*pte & 1)
+			break;
+		else
+			pte = NULL;
+	}
+	return pte;
+}
+
 PVOID MakeCanonicalAddress(PVOID address) {
 
 	uintptr_t trimmedAddress = ((uintptr_t)address << 16) >> 16;
@@ -107,4 +120,56 @@ PVOID MakeCanonicalAddress(PVOID address) {
 	}
 
 	return (PVOID)trimmedAddress;
+}
+
+size_t GetPml4Index(PVOID address) {
+	return ((uintptr_t)address >> 39) & 0x1ff;
+}
+
+BOOLEAN IsValidAddress(PVOID address) {
+	if (!IsCanonicalAddress(address)) return FALSE;
+	if (GetLastPageTableEntryPointer(address)) return TRUE;
+	else return FALSE;
+}
+
+BOOLEAN Hook::HookTrampoline(PVOID origFunction, PVOID hookFunction, PVOID gateway, size_t len) {
+
+	UCHAR detourTemplate[] = {
+		0xFF, 0x25, 0, 0, 0, 0
+	};
+
+	if (len < sizeof(detourTemplate) + 8) {
+		LogError("HookTrampoline: length is invalid, should be greater than %llu", sizeof(detourTemplate) + 8);
+		return FALSE;
+	}
+
+	if (!WriteOnReadOnlyMemory(origFunction, gateway, len)) {
+		return FALSE;
+	}
+
+	if (!WriteOnReadOnlyMemory(detourTemplate, (PVOID)((uintptr_t)gateway + len), sizeof(detourTemplate))) {
+		return FALSE;
+	}
+
+	uintptr_t returnAddress = (uintptr_t)origFunction + len;
+	if (!WriteOnReadOnlyMemory(&returnAddress, (PVOID)((uintptr_t)gateway + len + sizeof(detourTemplate)), 8)) {
+		return FALSE;
+	}
+
+	if (!WriteOnReadOnlyMemory(detourTemplate, origFunction, sizeof(detourTemplate))) {
+		return FALSE;
+	}
+	
+	uintptr_t detourAddress = (uintptr_t)hookFunction;
+	if (!WriteOnReadOnlyMemory(&detourAddress, (PVOID)((uintptr_t)origFunction + sizeof(detourTemplate)), 8)) {
+		return FALSE;
+	}
+
+	// So, the gateway is like this:
+	// .. (original code) .. | jmp [rip+0x00] | Orig.
+
+	// And the original function is like this:
+	// jmp [rip+0x00] | Hook
+	
+	return TRUE;
 }

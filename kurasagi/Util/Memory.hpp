@@ -38,5 +38,27 @@ UCHAR GetPml4eVaType(size_t index);
  * @returns Page Table entry for virtual address. `NULL` if failed to get it
  */
 UINT64* GetPageTableEntryPointer(PVOID v, size_t level);
+UINT64* GetLastPageTableEntryPointer(PVOID v);
 
 #define FlushTlb __writecr3(__readcr3())
+
+/*
+ * @brief Get Pml4 index of address.
+ */
+size_t GetPml4Index(PVOID address);
+
+/*
+ * @brief Determine if the address is valid.
+ * @return `TRUE` if valid, `FALSE` otherwise.
+ */
+BOOLEAN IsValidAddress(PVOID address);
+
+namespace Hook {
+
+	/*
+	 * @brief Trampoline hook `hookFunction`.
+	 * @return `TRUE` if operation was successful.
+	 */
+	BOOLEAN HookTrampoline(PVOID origFunction, PVOID hookFunction, PVOID gateway, size_t len);
+
+}

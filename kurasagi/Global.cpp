@@ -17,6 +17,10 @@ void* gl::RtVar::MaxDataSizePtr = NULL;
 void* gl::RtVar::KiSwInterruptDispatchPtr = NULL;
 void* gl::RtVar::KiMcaDeferredRecoveryServicePtr = NULL;
 void** gl::RtVar::MiVisibleStatePtr = NULL;
+void* gl::RtVar::KeDelayExecutionThreadPtr = NULL;
+void* gl::RtVar::KeWaitForMultipleObjectsPtr = NULL;
+void* gl::RtVar::KeWaitForSingleObjectPtr = NULL;
+NTSTATUS(NTAPI* gl::RtVar::MmAccessFaultPtr)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID) = NULL;
 
 uintptr_t gl::RtVar::Pte::MmPdeBase = 0;
 uintptr_t gl::RtVar::Pte::MmPdpteBase = 0;
@@ -40,6 +44,11 @@ BOOLEAN gl::RtVar::InitializeRuntimeVariables() {
 		return FALSE;
 	}
 
+	if (((PIMAGE_DOS_HEADER)KernelBase)->e_magic != IMAGE_DOS_SIGNATURE) {
+		LogError("InitializeRuntimeVariables: DOS Signature verify failed");
+		return FALSE;
+	}
+
 	KiWaitAlwaysPtr = (ULONG64*)((uintptr_t)KernelBase + gl::Offsets::KiWaitAlwaysOff);
 	KiWaitNeverPtr = (ULONG64*)((uintptr_t)KernelBase + gl::Offsets::KiWaitNeverOff);
 	KeGetCurrentPrcbPtr = (void* (*)())((uintptr_t)KernelBase + gl::Offsets::KeGetCurrentPrcbOff);
@@ -49,6 +58,10 @@ BOOLEAN gl::RtVar::InitializeRuntimeVariables() {
 	MaxDataSizePtr = (void*)((uintptr_t)KernelBase + gl::Offsets::MaxDataSizeOff);
 	KiMcaDeferredRecoveryServicePtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KiMcaDeferredRecoveryServiceOff);
 	MiVisibleStatePtr = (void**)((uintptr_t)KernelBase + gl::Offsets::MiVisibleStateOff);
+	KeDelayExecutionThreadPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KeDelayExecutionTheadOff);
+	KeWaitForSingleObjectPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KeWaitForSingleObjectOff);
+	KeWaitForMultipleObjectsPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KeWaitForMultipleObjectsOff);
+	MmAccessFaultPtr = (NTSTATUS(NTAPI*)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID))((uintptr_t)KernelBase + gl::Offsets::MmAccessFaultOff);
 
 	Pte::MmPteBase = *(uintptr_t*)((uintptr_t)KernelBase + gl::Offsets::MmPteBaseOff);
 

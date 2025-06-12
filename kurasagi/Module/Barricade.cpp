@@ -6,7 +6,61 @@
 #include "Barricade.hpp"
 #include "../Log.hpp"
 #include "../Util/Memory.hpp"
+#include "../Util/Arith.hpp"
 #include "../Global.hpp"
+
+ /* This is a trampoline area, used for storing hooks */
+void TrampolineArea() {
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+}
+
+#define HaltNxFault(tf) tf->Rip = *(ULONG64*)tf->Rsp; tf->Rsp += 8
+void HaltNxFault2(PKTRAP_FRAME tf) {
+	tf->Rsp &= ~0xF; // Align
+
+	// Simulate call KeDelayExecutionThread
+	tf->Rcx = (ULONG64)KernelMode;
+	tf->Rdx = false;
+	*(ULONG64*)(tf->R8 = (tf->Rsp + 0x28)) = (ULONG64)-0x11F0231A4F3000;
+
+	*(ULONG64*)tf->Rsp = tf->Rip;
+	tf->Rsp += 8;
+	tf->Rip = (ULONG64)gl::RtVar::KeDelayExecutionThreadPtr;
+
+	KeLowerIrql(APC_LEVEL);
+	tf->EFlags |= (1 << 9); // enable interrupt
+}
 
 /*
  * @brief Return if the ipxe index should be ignored.
@@ -24,14 +78,19 @@ BOOLEAN ToIgnoreIpxe(size_t ipxeIndex) {
 	INT32 toIgnoreList[] = {
 		MiVaProcessSpace,
 		MiVaDriverImages,
-		MiVaPagedPool,
-		MiVaSystemPtes,
-		MiVaSystemPtesLarge
+		MiVaPagedPool
 	};
 
 	for (auto i : toIgnoreList) {
 		if (ipxeVaType == i)
 			return TRUE;
+	}
+
+	// We should ignore the self referencing pml4e because
+	// if we don't, I don't know why but triple fault occurs.. wtf
+	if (ipxeIndex == GetPml4Index((PVOID)gl::RtVar::Pte::MmPteBase)) {
+		LogVerbose("ToIgnoreIpxe: You tried to consider self-referencing PML4 index, skipping.. (%llu)", ipxeIndex);
+		return TRUE;
 	}
 
 	return FALSE;
@@ -43,44 +102,47 @@ NTSTATUS NTAPI wsbp::Barricade::HkMmAccessFault(
 	_In_ KPROCESSOR_MODE Mode,
 	_In_ PVOID TrapInformation
 ) {
-	UNREFERENCED_PARAMETER(FaultCode);
-	UNREFERENCED_PARAMETER(Mode);
 
-	UNREFERENCED_PARAMETER(Address);
-	UNREFERENCED_PARAMETER(TrapInformation);
+	
+	// The Fault is not occured in user mode, nor it is caused by illegal write access.
+	if (!((FaultCode >> 2) & 1) && !((FaultCode >> 1) & 1)) {
+		if (CustomNxFaultHandler(Address, (PKTRAP_FRAME)TrapInformation)) {
+			return STATUS_SUCCESS;
+		}
+	}
 
-	return STATUS_SUCCESS;
+	return OrigMmAccessFault(FaultCode, Address, Mode, TrapInformation);
 }
 
 BOOLEAN wsbp::Barricade::CustomNxFaultHandler(void* faultAddress, PKTRAP_FRAME trapFrame) {
 
-	size_t pml4Index = ((uintptr_t)faultAddress >> 39) & 0x1FF;
+	size_t pml4Index = GetPml4Index(faultAddress);
 
 	if (ToIgnoreIpxe(pml4Index)) {
 		return FALSE;
 	}
 
-	void** stack = (void**)(trapFrame->Rsp & ~0b111uLL);
+	void **stack = (void**)(trapFrame->Rsp & ~0b111uLL);
 	KIRQL curIrql = KeGetCurrentIrql();
 
-	LogInfo("Nx exception caught at %llX", trapFrame->Rip);
+	LogInfo("NxF: Nx exception caught at %llX", trapFrame->Rip);
 	
 	// -=-=-=-=-=-=-=-=-=-=-=-= Debug -=-=-=-=-=-=-=-=-=-=-=-=
 	
 	// copied from WinDbg registers
-	LogVerbose("RAX: %llX", trapFrame->Rax);
-	LogVerbose("RBX: %llX", trapFrame->Rbx);
-	LogVerbose("RCX: %llX", trapFrame->Rcx);
-	LogVerbose("RDX: %llX", trapFrame->Rdx);
-	LogVerbose("RSI: %llX", trapFrame->Rsi);
-	LogVerbose("RDI: %llX", trapFrame->Rdi);
-	LogVerbose("RSP: %llX", trapFrame->Rsp);
-	LogVerbose("RBP: %llX", trapFrame->Rbp);
-	LogVerbose(" R8: %llX", trapFrame->R8);
-	LogVerbose(" R9: %llX", trapFrame->R9);
-	LogVerbose("R10: %llX", trapFrame->R10);
-	LogVerbose("R11: %llX", trapFrame->R11);
-	LogVerbose("IRQL: %u", curIrql);
+	LogVerbose("-  RAX:  %llX", trapFrame->Rax);
+	LogVerbose("-  RBX:  %llX", trapFrame->Rbx);
+	LogVerbose("-  RCX:  %llX", trapFrame->Rcx);
+	LogVerbose("-  RDX:  %llX", trapFrame->Rdx);
+	LogVerbose("-  RSI:  %llX", trapFrame->Rsi);
+	LogVerbose("-  RDI:  %llX", trapFrame->Rdi);
+	LogVerbose("-  RSP:  %llX", trapFrame->Rsp);
+	LogVerbose("-  RBP:  %llX", trapFrame->Rbp);
+	LogVerbose("-   R8:  %llX", trapFrame->R8);
+	LogVerbose("-   R9:  %llX", trapFrame->R9);
+	LogVerbose("-  R10:  %llX", trapFrame->R10);
+	LogVerbose("-  R11:  %llX", trapFrame->R11);
+	LogVerbose("- IRQL:  %u", curIrql);
 
 	// I'll add features if it gets detected, currently I think I bypassed all
 	// WITHOUT barricade method, so I'll keep it next
@@ -89,23 +151,118 @@ BOOLEAN wsbp::Barricade::CustomNxFaultHandler(void* faultAddress, PKTRAP_FRAME t
 
 	// -=-=-=-=-=-=-=-=-=-=-=-= Debug -=-=-=-=-=-=-=-=-=-=-=-=
 
-	UNREFERENCED_PARAMETER(stack);
+	UINT64* pte = GetLastPageTableEntryPointer(faultAddress);
 
-	UINT64* pte = NULL;
-	for (size_t level = 4;; level--) {
-		pte = GetPageTableEntryPointer(faultAddress, level);
-		if (*pte & 1) { // Present?
-			break;
+	if (!pte) {
+		LogError("NxF: Somehow PTE is not found, couldn't resolve it");
+		return FALSE;
+	}
+
+	if ((*pte >> 2) & 1) { // User / supervisor
+		LogInfo("NxF: User/Supervisor PTE, we do not handle this");
+		return FALSE;
+	}
+
+	// Let us do individual detection.
+
+	uintptr_t lastValidVp = 0;
+
+	if (curIrql >= DISPATCH_LEVEL) {
+
+		UCHAR* instBytes = (UCHAR*)trapFrame->Rip;
+
+		// CmpAppendDllSection bypass
+		if (!memcmp(instBytes, "\x2E\x48\x31", 3) && // The instruction is same
+			!IsCanonicalAddress((PVOID)trapFrame->Rdx) && // The key (to decrypt), it is not normal DeferredContext
+			trapFrame->Rcx == trapFrame->Rip) {
+
+			LogInfo("NxF: CmpAppendDllSection call detected (%llX), halting", trapFrame->Rip);
+			HaltNxFault(trapFrame);
+
+			return TRUE;
 		}
+
+		// KiDpcDispatch bypass
+		else if (!memcmp(instBytes, "\x48\x31", 2) &&
+			!IsCanonicalAddress((PVOID)trapFrame->Rdx) && // Also same, it is not normal DeferredContext
+			trapFrame->Rip - 0x60 < trapFrame->Rcx && // I do not want to modify code every kernel update. I saw it [rcx+48h] but it changes frequently.
+			trapFrame->Rip + 0x60 > trapFrame->Rcx) { // But this works. so.
+
+			LogInfo("NxF: KiDpcDispatch call detected (%llX), halting", trapFrame->Rip);
+			HaltNxFault(trapFrame);
+
+			return TRUE;
+		}
+
+		// I do not want to modify code every kernel update.
+		// Detect KiTimerDispatch by searching pushfq instruction & after sub rsp, XXX instruction,
+		// which is very(?) rare.
+		for (size_t i = 0; i < 0x20; i++) {
+			if (instBytes[i] == 0x48 && instBytes[i + 1] == 0x9C) { // pushfq
+				for (size_t j = i; j < i + 0x20; j++) {
+					if (instBytes[j] == 0x48 && instBytes[j + 1] == 0x83) {
+
+						LogInfo("NxF: KiTimerDispatch call detected (%llX), halting", trapFrame->Rip);
+						HaltNxFault(trapFrame);
+
+						return TRUE;
+
+					}
+				}
+			}
+		}
+
+		// Currently there are no PG routine that requires more than DISPATCH_LEVEL irql.
+		if (curIrql > DISPATCH_LEVEL) {
+			LogInfo("NxF: Current Irql is higher than DISPATCH_LEVEL");
+			goto FALSE_POSITIVE;
+		}
+
+		if (PsGetCurrentProcess() != PsInitialSystemProcess) {
+			LogInfo("NxF: Current thread is not executed by ntoskrnl");
+			goto FALSE_POSITIVE;
+		}
+
+		if (KeIsExecutingDpc()) {
+			LogInfo("NxF: Dpc is actually delivered");
+			goto FALSE_POSITIVE;
+		}
+
 	}
 
-	if (pte) {
-		// It should be false positive. (or BSOD..)
-		*pte &= ~(1ULL << 63);
+	// Walk stack...
+	for (size_t step = 0; step < 0x20; step++) {
+
+		auto* valuePtr = &stack[step];
+
+		// Check sanity with pages.
+		if (auto vp = (uintptr_t)valuePtr >> 12; vp != lastValidVp) {
+			if (!IsValidAddress((PVOID)valuePtr)) {
+				break;
+			}
+			lastValidVp = vp;
+		}
+
+		void* value = *valuePtr;
+
+		// Check if it is matched
+		if (value != gl::RtVar::KeDelayExecutionThreadPtr &&
+			value != gl::RtVar::KeWaitForMultipleObjectsPtr &&
+			value != gl::RtVar::KeWaitForSingleObjectPtr) {
+			continue;
+		}
+
+		LogInfo("NxF: PatchGuard thread detected, suspending...");
+		HaltNxFault2(trapFrame);
+		return TRUE;
 	}
-	else {
-		return FALSE; // We couldn't find the PTE, so we can't fix it.
-	}
+
+FALSE_POSITIVE:
+	LogInfo("NxF: False positive, restoring");
+
+	// It should be false positive.
+	*pte &= ~(1ULL << 63);
+	FlushTlb;
 
 	return TRUE;
 }
@@ -135,6 +292,7 @@ BOOLEAN wsbp::Barricade::FlipPteNxBitIdPc(KDPC* Dpc, PVOID DeferredContext, PVOI
 			}
 
 			// We do process large pages.
+			// LogVerbose("LambdaRecursePteToFlip: Large page @ %p", virtualAddress);
 		}
 
 		// Check if it is RWX.
@@ -143,18 +301,19 @@ BOOLEAN wsbp::Barricade::FlipPteNxBitIdPc(KDPC* Dpc, PVOID DeferredContext, PVOI
 			return;
 		}
 
-		if ((*ptEntryPtr >> 2) & 1) { // Usermode
-			LogVerbose("LambdaRecursePteToFlip: Virtual Address %p is in usermode, skipping..", virtualAddress);
-			return;
-		}
-
+		size_t pageSize = 1ULL << (12 + 9 * (remainingRecurse - 1));
+		
 		// Check if it is our driver code section.
-		if ((uintptr_t)virtualAddress < gl::RtVar::Self::SelfBase + gl::RtVar::Self::SelfSize &&
-			(uintptr_t)virtualAddress >= gl::RtVar::Self::SelfBase) {
+		// We'll get triple fault if we do not.
+		if (IsCollapsing((uintptr_t)virtualAddress,
+			(uintptr_t)virtualAddress + pageSize - 1,
+			gl::RtVar::Self::SelfBase,
+			gl::RtVar::Self::SelfBase + gl::RtVar::Self::SelfSize - 1)) {
 			LogVerbose("LambdaRecursePteToFlip: Virtual Address %p is in our driver, skipping..", virtualAddress);
 			return;
 		}
 
+		//LogVerbose("LambdaRecursePteToFlip Flip RWX @ %p", virtualAddress);
 		*ptEntryPtr |= (1ULL << 63); // Flip the NX bit.
 	};
 
@@ -201,29 +360,25 @@ VOID wsbp::Barricade::FlipPteNxBit() {
 	return;
 }
 
-BOOLEAN wsbp::Barricade::InjectCustomInterruptHandlerIdPc(KDPC* Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2) {
-	
-	UNREFERENCED_PARAMETER(Dpc);
-	UNREFERENCED_PARAMETER(DeferredContext);
+BOOLEAN wsbp::Barricade::InjectCustomInterruptHandler() {
 
-	KeSignalCallDpcSynchronize(SystemArgument2);
-	KeSignalCallDpcDone(SystemArgument1);
+	if (!Hook::HookTrampoline(gl::RtVar::MmAccessFaultPtr, HkMmAccessFault, TrampolineArea, gl::Constants::MmAccessFaultInstSize)) {
+		LogError("InjectCustomInterruptHandler: Couldn't initiate hook for MmAccessFault");
+		return FALSE;
+	}
+
+	LogInfo("InjectCustomInterruptHandler: Done.");
 
 	return TRUE;
 }
 
-VOID wsbp::Barricade::InjectCustomInterruptHandler() {
-
-	KeGenericCallDpc((PKDEFERRED_ROUTINE)InjectCustomInterruptHandlerIdPc, NULL);
-	
-	LogInfo("InjectCustomInterruptHandler: Done.");
-
-	return;
-}
-
 BOOLEAN wsbp::Barricade::SetupBarricade() {
 
-	InjectCustomInterruptHandler();
+	if (!InjectCustomInterruptHandler()) {
+		LogError("SetupBarricade: Couldn't inject custom interrupt handler");
+		return FALSE;
+	}
+
 	FlipPteNxBit();
 
 	LogInfo("SetupBarricade: Barricade was successfully set up.");
@@ -231,37 +386,5 @@ BOOLEAN wsbp::Barricade::SetupBarricade() {
 	return TRUE;
 }
 
-void wsbp::Barricade::TrampolineArea() {
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-}
+NTSTATUS(NTAPI* wsbp::Barricade::OrigMmAccessFault)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID) = 
+	(NTSTATUS(NTAPI *)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID))(TrampolineArea);

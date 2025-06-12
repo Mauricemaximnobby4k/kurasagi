@@ -36,6 +36,8 @@ namespace gl {
 			constexpr INT32 MiVaKasan = 0x13;
 			constexpr INT32 MiVaMaximumType = 0x14;
 		}
+
+		const size_t MmAccessFaultInstSize = 15;
 	}
 
 	namespace Offsets {
@@ -43,15 +45,19 @@ namespace gl {
 		// Function Offsets.
 		const size_t KiWaitAlwaysOff = 0xFC6260;
 		const size_t KiWaitNeverOff = 0xFC5F80;
-		const size_t KeBugCheckExOff = 0x500A70;
-		const size_t KeGetCurrentPrcbOff = 0x446D50;
-		const size_t CcBcbProfilerOff = 0x50CD50;
-		const size_t CcBcbProfiler2Off = 0x6F76E0;
+		const size_t KeBugCheckExOff = 0x5017D0;
+		const size_t KeGetCurrentPrcbOff = 0x451A20;
+		const size_t CcBcbProfilerOff = 0x50DAB0;
+		const size_t CcBcbProfiler2Off = 0x6F86E0;
 		const size_t MaxDataSizeOff = 0xFC5A48;
-		const size_t KiSwInterruptDispatchOff = 0x50D960;
-		const size_t KiMcaDeferredRecoveryServiceOff = 0x6AF420;
+		const size_t KiSwInterruptDispatchOff = 0x50E6C0;
+		const size_t KiMcaDeferredRecoveryServiceOff = 0x6B0410;
 		const size_t MiVisibleStateOff = 0xFC44C0;
 		const size_t MmPteBaseOff = 0xFC4478;
+		const size_t KeDelayExecutionTheadOff = 0x2A00B0;
+		const size_t KeWaitForMultipleObjectsOff = 0x2A1B90;
+		const size_t KeWaitForSingleObjectOff = 0x2CA7A0;
+		const size_t MmAccessFaultOff = 0x229440;
 
 		// Timer
 		const size_t PrcbTimerTableOff = 0x4100;
@@ -68,6 +74,7 @@ namespace gl {
 	}
 
 	namespace RtVar {
+
 		extern void* KernelBase;
 		extern ULONG64* KiWaitAlwaysPtr;
 		extern ULONG64* KiWaitNeverPtr;
@@ -79,6 +86,10 @@ namespace gl {
 		extern void* KiSwInterruptDispatchPtr;
 		extern void* KiMcaDeferredRecoveryServicePtr;
 		extern void** MiVisibleStatePtr;
+		extern void* KeDelayExecutionThreadPtr;
+		extern void* KeWaitForMultipleObjectsPtr;
+		extern void* KeWaitForSingleObjectPtr;
+		extern NTSTATUS(NTAPI* MmAccessFaultPtr)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID);
 
 		namespace Pte {
 			extern uintptr_t MmPteBase;

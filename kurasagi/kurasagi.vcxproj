@@ -126,6 +126,7 @@
     <ClCompile Include="Module\Context7.cpp" />
     <ClCompile Include="Module\Misc.cpp" />
     <ClCompile Include="Module\Timer.cpp" />
+    <ClCompile Include="Util\Arith.cpp" />
     <ClCompile Include="Util\Memory.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +138,7 @@
     <ClInclude Include="Module\Context7.hpp" />
     <ClInclude Include="Module\Misc.hpp" />
     <ClInclude Include="Module\Timer.hpp" />
+    <ClInclude Include="Util\Arith.hpp" />
     <ClInclude Include="Util\Memory.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

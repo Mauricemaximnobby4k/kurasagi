@@ -19,8 +19,7 @@ extern "C" NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Reg
 
 	LogVerbose("DriverEntry: Driver Image Base: %llX", gl::RtVar::Self::SelfBase);
 	LogVerbose("DriverEntry: Driver Image Size: %llx", gl::RtVar::Self::SelfSize);
-	
-	
+
 	if (!wsbp::BypassPatchGuard()) {
 		LogError("DriverEntry: Failed to bypass PatchGuard");
 		return STATUS_UNSUCCESSFUL;
