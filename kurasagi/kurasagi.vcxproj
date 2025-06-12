@@ -121,31 +121,23 @@
   <ItemGroup>
     <ClCompile Include="Entry.cpp" />
     <ClCompile Include="Global.cpp" />
+    <ClCompile Include="Module.cpp" />
+    <ClCompile Include="Module\Barricade.cpp" />
+    <ClCompile Include="Module\Context7.cpp" />
+    <ClCompile Include="Module\Misc.cpp" />
     <ClCompile Include="Module\Timer.cpp" />
+    <ClCompile Include="Util\Memory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Global.hpp" />
     <ClInclude Include="Include.hpp" />
-    <ClInclude Include="Include\jxy\alloc.hpp" />
-    <ClInclude Include="Include\jxy\deque.hpp" />
-    <ClInclude Include="Include\jxy\list.hpp" />
-    <ClInclude Include="Include\jxy\locks.hpp" />
-    <ClInclude Include="Include\jxy\map.hpp" />
-    <ClInclude Include="Include\jxy\memory.hpp" />
-    <ClInclude Include="Include\jxy\multiset.hpp" />
-    <ClInclude Include="Include\jxy\queue.hpp" />
-    <ClInclude Include="Include\jxy\scope.hpp" />
-    <ClInclude Include="Include\jxy\set.hpp" />
-    <ClInclude Include="Include\jxy\stack.hpp" />
-    <ClInclude Include="Include\jxy\string.hpp" />
-    <ClInclude Include="Include\jxy\thread.hpp" />
-    <ClInclude Include="Include\jxy\unordered_map.hpp" />
-    <ClInclude Include="Include\jxy\unordered_set.hpp" />
-    <ClInclude Include="Include\jxy\vector.hpp" />
     <ClInclude Include="Log.hpp" />
     <ClInclude Include="Module.hpp" />
     <ClInclude Include="Module\Barricade.hpp" />
+    <ClInclude Include="Module\Context7.hpp" />
+    <ClInclude Include="Module\Misc.hpp" />
     <ClInclude Include="Module\Timer.hpp" />
+    <ClInclude Include="Util\Memory.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

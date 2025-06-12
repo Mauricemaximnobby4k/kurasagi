@@ -13,6 +13,18 @@ void* gl::RtVar::KeBugCheckExPtr = NULL;
 void* (*gl::RtVar::KeGetCurrentPrcbPtr)() = NULL;
 void* gl::RtVar::CcBcbProfilerPtr = NULL;
 void* gl::RtVar::CcBcbProfiler2Ptr = NULL;
+void* gl::RtVar::MaxDataSizePtr = NULL;
+void* gl::RtVar::KiSwInterruptDispatchPtr = NULL;
+void* gl::RtVar::KiMcaDeferredRecoveryServicePtr = NULL;
+void** gl::RtVar::MiVisibleStatePtr = NULL;
+
+uintptr_t gl::RtVar::Pte::MmPdeBase = 0;
+uintptr_t gl::RtVar::Pte::MmPdpteBase = 0;
+uintptr_t gl::RtVar::Pte::MmPteBase = 0;
+uintptr_t gl::RtVar::Pte::MmPml4eBase = 0;
+
+uintptr_t gl::RtVar::Self::SelfBase = NULL;
+size_t gl::RtVar::Self::SelfSize = 0;
 
 BOOLEAN gl::RtVar::InitializeRuntimeVariables() {
 
@@ -21,28 +33,10 @@ BOOLEAN gl::RtVar::InitializeRuntimeVariables() {
 	RtlInitUnicodeString(&strKeBugCheckEx, L"KeBugCheckEx");
 	KeBugCheckExPtr = MmGetSystemRoutineAddress(&strKeBugCheckEx);
 
-	if (!KeBugCheckExPtr) {
-		LogError("InitializeRuntimeVariables: Couldn't get KeBugCheckEx routine address, what?");
-		return FALSE;
-	}
-
 	KernelBase = (void*)((uintptr_t)KeBugCheckExPtr - gl::Offsets::KeBugCheckExOff);
 
-	// Check sanity: It should be aligned to PAGE_SIZE..
-	if (((ULONG64)KernelBase & 0xFFFULL) != 0) {
-		LogError("InitializeRuntimeVariables: Kernel Base is not aligned to PAGE_SIZE");
-		return FALSE;
-	}
-
-	// Check Sanity: It should start with 5A4D..
-	__try {
-		if (*(unsigned short*)KernelBase != 0x5A4D) {
-			LogError("InitializeRuntimeVariables: KernelBase does not start with PE header.");
-			return FALSE;
-		}
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER) {
-		LogError("InitializeRuntimeVariables: Cannot derefer KernelBase pointer");
+	if (((uintptr_t)KernelBase & 0xFFF) != 0) {
+		LogError("InitializeRuntimeVariables: Base mismatch! Please update offsets");
 		return FALSE;
 	}
 
@@ -51,6 +45,25 @@ BOOLEAN gl::RtVar::InitializeRuntimeVariables() {
 	KeGetCurrentPrcbPtr = (void* (*)())((uintptr_t)KernelBase + gl::Offsets::KeGetCurrentPrcbOff);
 	CcBcbProfilerPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::CcBcbProfilerOff);
 	CcBcbProfiler2Ptr = (void*)((uintptr_t)KernelBase + gl::Offsets::CcBcbProfiler2Off);
+	KiSwInterruptDispatchPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KiSwInterruptDispatchOff);
+	MaxDataSizePtr = (void*)((uintptr_t)KernelBase + gl::Offsets::MaxDataSizeOff);
+	KiMcaDeferredRecoveryServicePtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KiMcaDeferredRecoveryServiceOff);
+	MiVisibleStatePtr = (void**)((uintptr_t)KernelBase + gl::Offsets::MiVisibleStateOff);
+
+	Pte::MmPteBase = *(uintptr_t*)((uintptr_t)KernelBase + gl::Offsets::MmPteBaseOff);
+
+	size_t selfRefIndex = (Pte::MmPteBase >> 39) & 0x1FF;
+	uintptr_t base = Pte::MmPteBase;
+
+	base |= (selfRefIndex << 30);
+	Pte::MmPdeBase = base;
+	base |= (selfRefIndex << 21);
+	Pte::MmPdpteBase = base;
+	base |= (selfRefIndex << 12);
+	Pte::MmPml4eBase = base;
+	
+	Self::SelfBase = (uintptr_t)&__ImageBase;
+	Self::SelfSize = (uintptr_t)&__end - Self::SelfBase;
 
 	return TRUE;
 }

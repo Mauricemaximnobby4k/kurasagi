@@ -7,26 +7,15 @@
 
 #include "../Include.hpp"
 
+typedef struct _KTIMER_TABLE_ENTRY
+{
+	unsigned __int64 Lock;
+	_LIST_ENTRY Entry;
+	_ULARGE_INTEGER Time;
+} KTIMER_TABLE_ENTRY, * PKTIMER_TABLE_ENTRY;
+
 namespace wsbp {
 	namespace Timer {
-
-		typedef struct _KTIMER_TABLE_ENTRY
-		{
-			unsigned __int64 Lock;
-			_LIST_ENTRY Entry;
-			_ULARGE_INTEGER Time;
-		} KTIMER_TABLE_ENTRY, * PKTIMER_TABLE_ENTRY;
-
-		/*
-		 * @brief Get PatchGuard KTIMER Objects.
-		 * @param pOutList: Pointer to receive KTIMER Obejct List. if `NULL`, `pCount` will be returned.
-		 * @param pCount: Pointer to receive count of KTIMER Object List. if `pOutList` is not `NULL`, this parameter will be ignored.
-		 * @returns `TRUE` if operation was successful, `FALSE` otherwise.
-		 */
-		BOOLEAN GetPatchGuardTimers(
-			PKTIMER* pOutList,
-			size_t* pCount
-		);
 
 		/*
 		 * @brief Judge if it is PatchGuard Timer.
@@ -45,5 +34,24 @@ namespace wsbp {
 		PKDPC GetDecryptedDpc(
 			PKTIMER pTimer
 		);
+
+		/*
+		 * @brief Disables PatchGuard Timers.
+		 * @returns None
+		 */
+		VOID DisablePatchGuardTimers();
+		BOOLEAN DisablePatchGuardTimersIdPc(KDPC* Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2);
+
+		/*
+		 * @brief Restores original timers which was hooked by PatchGuard.
+		 * @returns `TRUE` if success, `FALSE` otherwise.
+		 */
+		BOOLEAN RestorePgHookedTimers();
+
+		/*
+		 * @brief Disables all timers.
+		 * @returns `TRUE` if success, `FALSE` otherwise.
+		 */
+		BOOLEAN DisableAllTimers();
 	}
 }

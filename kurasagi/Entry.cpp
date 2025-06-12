@@ -16,31 +16,16 @@ extern "C" NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Reg
 		LogError("DriverEntry: Failed to initialize runtime variables.");
 		return STATUS_UNSUCCESSFUL;
 	}
+
+	LogVerbose("DriverEntry: Driver Image Base: %llX", gl::RtVar::Self::SelfBase);
+	LogVerbose("DriverEntry: Driver Image Size: %llx", gl::RtVar::Self::SelfSize);
 	
-	PKTIMER* timerList = NULL;
-	size_t timerCount = 0;
-
-	if (!wsbp::Timer::GetPatchGuardTimers(NULL, &timerCount)) {
+	
+	if (!wsbp::BypassPatchGuard()) {
+		LogError("DriverEntry: Failed to bypass PatchGuard");
 		return STATUS_UNSUCCESSFUL;
 	}
-
-	timerList = (PKTIMER*)ExAllocatePool2(POOL_FLAG_PAGED, sizeof(PKTIMER) * timerCount, KURASAGI_POOL_TAG);
-	if (timerList == NULL) {
-		LogError("DriverEntry: Couldn't allocate timerList, sizeof %llu", sizeof(PKTIMER) * timerCount);
-		return STATUS_UNSUCCESSFUL;
-	}
-
-	if (!wsbp::Timer::GetPatchGuardTimers(timerList, &timerCount)) {
-		ExFreePoolWithTag(timerList, KURASAGI_POOL_TAG);
-		return STATUS_UNSUCCESSFUL;
-	}
-
-	for (size_t i = 0; i < timerCount; i++) {
-		LogInfo("Timer %llu: %p", i, timerList[i]);
-	}
-	LogInfo("Timer counts: %llu", timerCount);
-
-	ExFreePoolWithTag(timerList, KURASAGI_POOL_TAG);
+	
 
 	return STATUS_SUCCESS;
 }
