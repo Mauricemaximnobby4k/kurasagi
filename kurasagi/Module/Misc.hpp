@@ -19,18 +19,18 @@ namespace wsbp {
 		 * @returns `TRUE` if operation was successful, `FALSE` otherwise.
 		 */
 		BOOLEAN FixKiMcaDeferredRecoveryServicePtr();
+		
+		/*
+		 * @brief Fix Patchguard Apcs.
+		 * @returns `TRUE` if operation was successful.
+		 */
+		BOOLEAN FixPgApc();
 
 		/*
-		 * @brief Terminate PG-associated system thread.
-		 * @returns `TRUE` if operation was successful, `FALSE` otherwise.
+		 * @brief Fix Patchguard system thread.
+		 * @returns `TRUE` if operation was successful.
 		 */
-		BOOLEAN TerminatePatchGuardThread();
-
-		/*
-		 * @brief Terminate PG-associated APC.
-		 * @returns `TRUE` if operation was successful, `FALSE` otherwise.
-		 */
-		BOOLEAN TerminatePatchGuardApc();
+		BOOLEAN FixPgSystemThread();
 
 		/*
 		 * @brief Disable all miscellaneous routines.

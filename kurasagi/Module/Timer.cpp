@@ -122,8 +122,19 @@ VOID wsbp::Timer::DisablePatchGuardTimers() {
 BOOLEAN wsbp::Timer::DisableAllTimers() {
 
 	DisablePatchGuardTimers();
+	RestorePgTimerHook();
 
 	LogInfo("DisableAllTimers: Successfully downed all timers.");
 
 	return TRUE;
+}
+
+VOID wsbp::Timer::RestorePgTimerHook() {
+
+	using namespace gl::RtVar;
+	KiBalanceSetManagerPeriodicDpcPtr->DeferredRoutine = (PKDEFERRED_ROUTINE)KiBalanceSetManagerDeferredRoutinePtr;
+	// They do not modify DeferredContext, if they do, the system will be inextricable
+	LogInfo("RestorePgTimerHook: Done");
+
+	return;
 }

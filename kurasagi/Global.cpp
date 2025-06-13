@@ -21,6 +21,9 @@ void* gl::RtVar::KeDelayExecutionThreadPtr = NULL;
 void* gl::RtVar::KeWaitForMultipleObjectsPtr = NULL;
 void* gl::RtVar::KeWaitForSingleObjectPtr = NULL;
 NTSTATUS(NTAPI* gl::RtVar::MmAccessFaultPtr)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID) = NULL;
+void* gl::RtVar::KiPageFaultPtr = NULL;
+void* gl::RtVar::KiBalanceSetManagerDeferredRoutinePtr = NULL;
+KDPC* gl::RtVar::KiBalanceSetManagerPeriodicDpcPtr = NULL;
 
 uintptr_t gl::RtVar::Pte::MmPdeBase = 0;
 uintptr_t gl::RtVar::Pte::MmPdpteBase = 0;
@@ -62,6 +65,9 @@ BOOLEAN gl::RtVar::InitializeRuntimeVariables() {
 	KeWaitForSingleObjectPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KeWaitForSingleObjectOff);
 	KeWaitForMultipleObjectsPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KeWaitForMultipleObjectsOff);
 	MmAccessFaultPtr = (NTSTATUS(NTAPI*)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID))((uintptr_t)KernelBase + gl::Offsets::MmAccessFaultOff);
+	KiPageFaultPtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KiPageFaultOff);
+	KiBalanceSetManagerPeriodicDpcPtr = (KDPC*)((uintptr_t)KernelBase + gl::Offsets::KiBalanceSetManagerPeriodicDpcOff);
+	KiBalanceSetManagerDeferredRoutinePtr = (void*)((uintptr_t)KernelBase + gl::Offsets::KiBalanceSetManagerDeferredRoutineOff);
 
 	Pte::MmPteBase = *(uintptr_t*)((uintptr_t)KernelBase + gl::Offsets::MmPteBaseOff);
 

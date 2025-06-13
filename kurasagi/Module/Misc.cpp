@@ -27,7 +27,25 @@ BOOLEAN wsbp::Misc::DisableMiscRoutines() {
 		return FALSE;
 	}
 
+	if (!FixPgApc()) {
+		return FALSE;
+	}
+
+	if (!FixPgSystemThread()) {
+		return FALSE;
+	}
+
 	LogInfo("DisableMiscRoutines: Miscellaneous routines are all disabled.");
 
+	return TRUE;
+}
+
+BOOLEAN wsbp::Misc::FixPgApc() {
+	// Deprecated, moved to Barricade. Because it just uses SO MUCH RESOURCES
+	return TRUE;
+}
+
+BOOLEAN wsbp::Misc::FixPgSystemThread() {
+	// Deprecated, moved to Barricade. Because it just uses SO MUCH RESOURCES
 	return TRUE;
 }

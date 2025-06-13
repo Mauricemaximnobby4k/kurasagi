@@ -43,10 +43,9 @@ namespace wsbp {
 		BOOLEAN DisablePatchGuardTimersIdPc(KDPC* Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2);
 
 		/*
-		 * @brief Restores original timers which was hooked by PatchGuard.
-		 * @returns `TRUE` if success, `FALSE` otherwise.
+		 * @brief Restore PatchGuard Timer Hook.
 		 */
-		BOOLEAN RestorePgHookedTimers();
+		VOID RestorePgTimerHook();
 
 		/*
 		 * @brief Disables all timers.

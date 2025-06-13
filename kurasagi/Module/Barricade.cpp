@@ -89,12 +89,12 @@ BOOLEAN ToIgnoreIpxe(size_t ipxeIndex) {
 	// We should ignore the self referencing pml4e because
 	// if we don't, I don't know why but triple fault occurs.. wtf
 	if (ipxeIndex == GetPml4Index((PVOID)gl::RtVar::Pte::MmPteBase)) {
-		LogVerbose("ToIgnoreIpxe: You tried to consider self-referencing PML4 index, skipping.. (%llu)", ipxeIndex);
 		return TRUE;
 	}
 
 	return FALSE;
 }
+
 
 NTSTATUS NTAPI wsbp::Barricade::HkMmAccessFault(
 	_In_ ULONG FaultCode,
@@ -102,12 +102,16 @@ NTSTATUS NTAPI wsbp::Barricade::HkMmAccessFault(
 	_In_ KPROCESSOR_MODE Mode,
 	_In_ PVOID TrapInformation
 ) {
-
 	
-	// The Fault is not occured in user mode, nor it is caused by illegal write access.
-	if (!((FaultCode >> 2) & 1) && !((FaultCode >> 1) & 1)) {
-		if (CustomNxFaultHandler(Address, (PKTRAP_FRAME)TrapInformation)) {
-			return STATUS_SUCCESS;
+	// It should be called from KiPageFault..
+	if (_ReturnAddress() == (PVOID)((uintptr_t)gl::RtVar::KiPageFaultPtr + gl::Offsets::FaultingAddressOff)) {
+
+		// The Fault is not occured in user mode, nor it is caused by illegal write access.
+		if (!((FaultCode >> 2) & 1) && !((FaultCode >> 1) & 1) && TrapInformation != NULL) {
+			
+			if (CustomNxFaultHandler(Address, (PKTRAP_FRAME)TrapInformation)) {
+				return STATUS_SUCCESS;
+			}
 		}
 	}
 
@@ -118,14 +122,16 @@ BOOLEAN wsbp::Barricade::CustomNxFaultHandler(void* faultAddress, PKTRAP_FRAME t
 
 	size_t pml4Index = GetPml4Index(faultAddress);
 
-	if (ToIgnoreIpxe(pml4Index)) {
+	// Ignore the PML4 index if it is in the range of 0-255 (usermode)
+	// or if it is in the list of ignored PML4 indices.
+	if (pml4Index < 256 || ToIgnoreIpxe(pml4Index)) {
 		return FALSE;
 	}
-
+	
 	void **stack = (void**)(trapFrame->Rsp & ~0b111uLL);
 	KIRQL curIrql = KeGetCurrentIrql();
 
-	LogInfo("NxF: Nx exception caught at %llX", trapFrame->Rip);
+	LogVerbose("NxF: Nx exception caught at %llX", trapFrame->Rip);
 	
 	// -=-=-=-=-=-=-=-=-=-=-=-= Debug -=-=-=-=-=-=-=-=-=-=-=-=
 	
@@ -214,23 +220,23 @@ BOOLEAN wsbp::Barricade::CustomNxFaultHandler(void* faultAddress, PKTRAP_FRAME t
 
 		// Currently there are no PG routine that requires more than DISPATCH_LEVEL irql.
 		if (curIrql > DISPATCH_LEVEL) {
-			LogInfo("NxF: Current Irql is higher than DISPATCH_LEVEL");
+			LogVerbose("NxF: Current Irql is higher than DISPATCH_LEVEL");
 			goto FALSE_POSITIVE;
 		}
 
 		if (PsGetCurrentProcess() != PsInitialSystemProcess) {
-			LogInfo("NxF: Current thread is not executed by ntoskrnl");
+			LogVerbose("NxF: Current thread is not executed by ntoskrnl");
 			goto FALSE_POSITIVE;
 		}
 
 		if (KeIsExecutingDpc()) {
-			LogInfo("NxF: Dpc is actually delivered");
+			LogVerbose("NxF: Dpc is actually delivered");
 			goto FALSE_POSITIVE;
 		}
 
 	}
 
-	// Walk stack...
+	// Walk stack... Same as FixPgSystemThread
 	for (size_t step = 0; step < 0x20; step++) {
 
 		auto* valuePtr = &stack[step];
@@ -258,13 +264,15 @@ BOOLEAN wsbp::Barricade::CustomNxFaultHandler(void* faultAddress, PKTRAP_FRAME t
 	}
 
 FALSE_POSITIVE:
-	LogInfo("NxF: False positive, restoring");
+	LogVerbose("NxF: False positive, restoring");
 
 	// It should be false positive.
 	*pte &= ~(1ULL << 63);
 	FlushTlb;
 
-	return TRUE;
+	// We do not process this, the original MmAccessFault will.
+	return FALSE;
+	
 }
 
 BOOLEAN wsbp::Barricade::FlipPteNxBitIdPc(KDPC* Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2) {

@@ -8,11 +8,9 @@
 
 BOOLEAN wsbp::BypassPatchGuard() {
 
-	/*
 	if (!Timer::DisableAllTimers()) {
 		return FALSE;
 	}
-
 	
 	if (!Context7::DestroyContext7()) {
 		return FALSE;
@@ -21,14 +19,13 @@ BOOLEAN wsbp::BypassPatchGuard() {
 	if (!Misc::DisableMiscRoutines()) {
 		return FALSE;
 	}
-	*/
 
 	if (!Barricade::SetupBarricade()) {
 		return FALSE;
 	}
 	
 
-	LogInfo("BypassPatchGuard: Bypassed PatchGuard, enjoy ;)");
+	DbgPrintEx(0, 0, "BypassPatchGuard: Bypassed PatchGuard, enjoy ;)");
 
 	return TRUE;
 }

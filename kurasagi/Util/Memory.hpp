@@ -57,6 +57,7 @@ namespace Hook {
 
 	/*
 	 * @brief Trampoline hook `hookFunction`.
+	 * @details `gateway` SHOULD be a function with over than 32 opcodes.
 	 * @return `TRUE` if operation was successful.
 	 */
 	BOOLEAN HookTrampoline(PVOID origFunction, PVOID hookFunction, PVOID gateway, size_t len);

@@ -64,14 +64,11 @@ BOOLEAN IsCanonicalAddress(PVOID address) {
 }
 
 UCHAR GetPml4eVaType(size_t index) {
-
 	if (index < 256 || index >= 512) {
 		return 0xFF;
 	}
-
 	UCHAR* systemVaType = (UCHAR*)((uintptr_t)*gl::RtVar::MiVisibleStatePtr + gl::Offsets::SystemVaTypeOff);
 	return systemVaType[index - 256];
-
 }
 
 UINT64* GetPageTableEntryPointer(PVOID v, size_t level) {
@@ -121,7 +118,7 @@ PVOID MakeCanonicalAddress(PVOID address) {
 
 	return (PVOID)trimmedAddress;
 }
-
+ 
 size_t GetPml4Index(PVOID address) {
 	return ((uintptr_t)address >> 39) & 0x1ff;
 }

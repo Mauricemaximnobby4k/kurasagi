@@ -58,6 +58,9 @@ namespace gl {
 		const size_t KeWaitForMultipleObjectsOff = 0x2A1B90;
 		const size_t KeWaitForSingleObjectOff = 0x2CA7A0;
 		const size_t MmAccessFaultOff = 0x229440;
+		const size_t KiPageFaultOff = 0x6B4440;
+		const size_t KiBalanceSetManagerDeferredRoutineOff = 0x4A5CD0;
+		const size_t KiBalanceSetManagerPeriodicDpcOff = 0xF21780;
 
 		// Timer
 		const size_t PrcbTimerTableOff = 0x4100;
@@ -68,9 +71,8 @@ namespace gl {
 		// MiVisibleState
 		const size_t SystemVaTypeOff = 0x1468;
 
-		namespace InterruptVector {
-			const size_t PfVector = 0x0E;
-		}
+		// KiPageFault->MmAccessFault
+		const size_t FaultingAddressOff = 0x386 + 0x5;
 	}
 
 	namespace RtVar {
@@ -90,6 +92,9 @@ namespace gl {
 		extern void* KeWaitForMultipleObjectsPtr;
 		extern void* KeWaitForSingleObjectPtr;
 		extern NTSTATUS(NTAPI* MmAccessFaultPtr)(_In_ ULONG, _In_ PVOID, _In_ KPROCESSOR_MODE, _In_ PVOID);
+		extern void* KiPageFaultPtr;
+		extern void* KiBalanceSetManagerDeferredRoutinePtr;
+		extern KDPC* KiBalanceSetManagerPeriodicDpcPtr;
 
 		namespace Pte {
 			extern uintptr_t MmPteBase;
