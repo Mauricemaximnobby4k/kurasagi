@@ -25,7 +25,7 @@ BOOLEAN wsbp::BypassPatchGuard() {
 	}
 	
 
-	DbgPrintEx(0, 0, "BypassPatchGuard: Bypassed PatchGuard, enjoy ;)");
+	DbgPrintEx(0, 0, "[Kurasagi] BYPASS: BypassPatchGuard: Bypassed PatchGuard, enjoy ;)\n");
 
 	return TRUE;
 }
