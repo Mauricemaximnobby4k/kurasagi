@@ -6,9 +6,10 @@ For more information, please refer to the `product` branch, which contains the P
 
 ## Disclaimers
 
-1. Do not turn on hypervisor-based security factors when running! (It will BSOD!)
-2. Use [kdmapper](https://github.com/TheCruZ/kdmapper) for driver loading.
-3. We just found that if we hook well-used functions, it will cause unknown BSOD. Just don't do that.
+1. **PLEASE USE IT FOR ONLY EDUCATIONAL PURPOSES!**
+2. Do not turn on hypervisor-based security factors when running! (It will BSOD!)
+3. Use [kdmapper](https://github.com/TheCruZ/kdmapper) for driver loading.
+4. We just found that if we hook well-used functions, it will cause unknown BSOD. Just don't do that.
 
 # Images
 

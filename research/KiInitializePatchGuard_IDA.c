@@ -6815,7 +6815,7 @@ LABEL_6576:
   }
 
   LODWORD(Size) = v144;
-  LODWORD(v5057) = v143 + 2792; // Size?
+  LODWORD(v5057) = v143 + FunctionStartRVA; // Size?
   LODWORD(PgContextSize) = v144 + v143 + 2792; // HypervisorSize?
   /*
   SizeResult 는 다음과 같은 연산에 의한 사이즈 입니다.
