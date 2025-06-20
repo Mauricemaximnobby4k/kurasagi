@@ -28,40 +28,10 @@ VOID NTAPI HookedExQueueWorkItem(
 	OriginalExQueueWorkItem(WorkItem, QueueType);
 }
 
-void Trampoline() {
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-	DbgBreakPoint();
-}
+#pragma section(".tram", read, execute)
+#pragma comment(linker, "/SECTION:.tram,RE")
+__declspec(allocate(".tram"))
+UCHAR Trampoline[64];
 
 NTSTATUS DriverEntry(
 	_In_ PDRIVER_OBJECT		DriverObject,
