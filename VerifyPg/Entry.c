@@ -3,33 +3,64 @@
  * @brief Entry point for the VerifyPg driver.
  */
 
-#include "Hook.h"
+#include "Include.h"
+#include "Memory.h"
 
 size_t ExQueueWorkItemOpSize = 15;
 
-VOID (NTAPI *OriginalKeBugCheckEx)(
-	_In_ ULONG BugCheckCode,
-	_In_ ULONG_PTR BugCheckParameter1,
-	_In_ ULONG_PTR BugCheckParameter2,
-	_In_ ULONG_PTR BugCheckParameter3,
-	_In_ ULONG_PTR BugCheckParameter4
+VOID (NTAPI *OriginalExQueueWorkItem)(
+	PWORK_QUEUE_ITEM WorkItem,
+	WORK_QUEUE_TYPE QueueType
 );
 
-VOID NTAPI HookedKeBugCheckEx(
-	_In_ ULONG BugCheckCode,
-	_In_ ULONG_PTR BugCheckParameter1,
-	_In_ ULONG_PTR BugCheckParameter2,
-	_In_ ULONG_PTR BugCheckParameter3,
-	_In_ ULONG_PTR BugCheckParameter4
+UINT32 i = 0;
+
+VOID NTAPI HookedExQueueWorkItem(
+	PWORK_QUEUE_ITEM WorkItem,
+	WORK_QUEUE_TYPE QueueType
 ) {
 
-	/*
-	if (BugCheckCode == 0x109) {
-		return;
+	if (i % 337 == 0) {
+		DbgPrintEx(0, 0, "ExQueueWorkItem i=%u", i);
 	}
-	*/
+	i++;
 
-	OriginalKeBugCheckEx(BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
+	OriginalExQueueWorkItem(WorkItem, QueueType);
+}
+
+void Trampoline() {
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
+	DbgBreakPoint();
 }
 
 NTSTATUS DriverEntry(
@@ -41,21 +72,22 @@ NTSTATUS DriverEntry(
 	UNREFERENCED_PARAMETER(DriverObject);
 
 	UNICODE_STRING routineString = { 0 };
-	RtlInitUnicodeString(&routineString, L"KeBugCheckEx");
+	RtlInitUnicodeString(&routineString, L"ExQueueWorkItem");
 	
-	void* KeBugCheckExPtr = MmGetSystemRoutineAddress(&routineString);
-	if (!KeBugCheckExPtr) {
+	void* ExQueueWorkItemPtr = MmGetSystemRoutineAddress(&routineString);
+	if (!ExQueueWorkItemPtr) {
 		DbgPrintEx(0, 0, "Wtf was happened??\n");
 		return STATUS_UNSUCCESSFUL;
 	}
 
-	// 10000 years ago exploit :skull:
-	if (NT_SUCCESS(HkDetourFunction(KeBugCheckExPtr, (PVOID)HookedKeBugCheckEx, 15, (PVOID*)&OriginalKeBugCheckEx))) {
+	OriginalExQueueWorkItem = (VOID(NTAPI*)(PWORK_QUEUE_ITEM, WORK_QUEUE_TYPE))Trampoline;
+
+	if (HookTrampoline(ExQueueWorkItemPtr, (PVOID)HookedExQueueWorkItem, (PVOID)Trampoline, ExQueueWorkItemOpSize)) {
 		DbgPrintEx(0, 0, "DriverEntry called. hooked.\n");
-		return STATUS_UNSUCCESSFUL;
+		return STATUS_SUCCESS;
 	}
 	else {
 		DbgPrintEx(0, 0, "DriverEntry called. hook failed.\n");
-		return STATUS_SUCCESS;
+		return STATUS_UNSUCCESSFUL;
 	}
 }

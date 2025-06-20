@@ -24,18 +24,18 @@
     </Inf>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Hook.h">
+    <ClInclude Include="Include.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include.h">
+    <ClInclude Include="Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Hook.c">
+    <ClCompile Include="Entry.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Entry.c">
+    <ClCompile Include="Memory.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
