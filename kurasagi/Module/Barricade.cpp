@@ -52,7 +52,7 @@ void HaltNxFault2(PKTRAP_FRAME tf) {
 	// Simulate call KeDelayExecutionThread
 	tf->Rcx = (ULONG64)KernelMode;
 	tf->Rdx = false;
-	*(ULONG64*)(tf->R8 = (tf->Rsp + 0x28)) = (ULONG64)-0x11F0231A4F3000;
+	*(ULONG64*)(tf->R8 = (tf->Rsp + 0x28)) = (ULONG64)-0x123456789AB000;
 
 	*(ULONG64*)tf->Rsp = tf->Rip;
 	tf->Rsp += 8;
