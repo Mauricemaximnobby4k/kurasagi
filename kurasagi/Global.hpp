@@ -11,7 +11,6 @@ namespace gl {
 
 	namespace Constants {
 		const size_t TimerTableEntryCount = 512;
-		const size_t HalReservedSize = 8;
 
 		namespace MiSystemVaType {
 			constexpr INT32 MiVaUnused = 0x0;
@@ -45,22 +44,22 @@ namespace gl {
 		// Function Offsets.
 		const size_t KiWaitAlwaysOff = 0xFC6260;
 		const size_t KiWaitNeverOff = 0xFC5F80;
-		const size_t KeBugCheckExOff = 0x5017D0;
-		const size_t KeGetCurrentPrcbOff = 0x451A20;
-		const size_t CcBcbProfilerOff = 0x50DAB0;
+		const size_t KeBugCheckExOff = 0x5005D0;
+		const size_t KeGetCurrentPrcbOff = 0x449220;
+		const size_t CcBcbProfilerOff = 0x50C8B0;
 		const size_t CcBcbProfiler2Off = 0x6F86E0;
 		const size_t MaxDataSizeOff = 0xFC5A48;
-		const size_t KiSwInterruptDispatchOff = 0x50E6C0;
-		const size_t KiMcaDeferredRecoveryServiceOff = 0x6B0410;
+		const size_t KiSwInterruptDispatchOff = 0x50D4C0;
+		const size_t KiMcaDeferredRecoveryServiceOff = 0x6B04A0;
 		const size_t MiVisibleStateOff = 0xFC44C0;
 		const size_t MmPteBaseOff = 0xFC4478;
-		const size_t KeDelayExecutionTheadOff = 0x2A00B0;
-		const size_t KeWaitForMultipleObjectsOff = 0x2A1B90;
-		const size_t KeWaitForSingleObjectOff = 0x2CA7A0;
-		const size_t MmAccessFaultOff = 0x229440;
-		const size_t KiPageFaultOff = 0x6B4440;
-		const size_t KiBalanceSetManagerDeferredRoutineOff = 0x4A5CD0;
-		const size_t KiBalanceSetManagerPeriodicDpcOff = 0xF21780;
+		const size_t KeDelayExecutionTheadOff = 0x28FF70;
+		const size_t KeWaitForMultipleObjectsOff = 0x291A50;
+		const size_t KeWaitForSingleObjectOff = 0x324760;
+		const size_t MmAccessFaultOff = 0x2AE130;
+		const size_t KiPageFaultOff = 0x6B4540;
+		const size_t KiBalanceSetManagerDeferredRoutineOff = 0x4A0140;
+		const size_t KiBalanceSetManagerPeriodicDpcOff = 0xF21AA0;
 
 		// Timer
 		const size_t PrcbTimerTableOff = 0x4100;

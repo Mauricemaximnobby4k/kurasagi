@@ -4,6 +4,10 @@
 
 For more information, please refer to the `product` branch, which contains the PDF paper detailing the bypass.
 
+## Changelog
+
+(2025/08/03) **주의**: 26100.4652 버전으로 업그레이드 했습니다. 26100.4351 버전을 위한 Bypass는 커밋 `80650b9cb71855042659137ecd8936f8a9336a61` 을 참조해주세요.
+
 ## Disclaimers
 
 1. **PLEASE USE IT FOR ONLY EDUCATIONAL PURPOSES!**
