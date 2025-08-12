@@ -6,15 +6,21 @@ For more information, please refer to the `product` branch, which contains the P
 
 ## Changelog
 
-(2025/08/03) **ÁÖÀÇ**: 26100.4652 ¹öÀüÀ¸·Î ¾÷±×·¹ÀÌµå Çß½À´Ï´Ù. 26100.4351 ¹öÀüÀ» À§ÇÑ Bypass´Â Ä¿¹Ô `80650b9cb71855042659137ecd8936f8a9336a61` À» ÂüÁ¶ÇØÁÖ¼¼¿ä.
+(2025/08/03) **Caution**: Upgraded to 26100.4652. for 26100.4351 version bypass, refer to commit `80650b9cb71855042659137ecd8936f8a9336a61`.
 
 ## Disclaimers
 
 1. **PLEASE USE IT FOR ONLY EDUCATIONAL PURPOSES!**
 2. Do not turn on hypervisor-based security factors when running! (It will BSOD!)
 3. Use [kdmapper](https://github.com/TheCruZ/kdmapper) for driver loading.
-4. ~~We just found that if we hook well-used functions, it will cause unknown BSOD. Just don't do that.~~ NonPagedPoolExecute¸¦ ÇÒ´çÇÒ ¶§ `kurasagi`°¡ ·ÎµùµÇ¾î ÀÖÀ» °æ¿ì PTE¿¡ °©ÀÚ±â NX ºñÆ®°¡ ¼³Á¤µÇ´Â °ÍÀ» È®ÀÎÇß½À´Ï´Ù. ÀÌÀ¯´Â ¸ğ¸£°Ú³×¿ä. ÇØ°áÇß½À´Ï´Ù.
+4. ~~We just found that if we hook well-used functions, it will cause unknown BSOD. Just don't do that.~~ NonPagedPoolExecuteë¥¼ í• ë‹¹í•  ë•Œ `kurasagi`ê°€ ë¡œë”©ë˜ì–´ ìˆì„ ê²½ìš° PTEì— ê°‘ìê¸° NX ë¹„íŠ¸ê°€ ì„¤ì •ë˜ëŠ” ê²ƒì„ í™•ì¸í–ˆìŠµë‹ˆë‹¤. ì´ìœ ëŠ” ëª¨ë¥´ê² ë„¤ìš”. í•´ê²°í–ˆìŠµë‹ˆë‹¤.
 
 # Images
 
 ![proof](assets/proof.png)
+
+## Credit
+Here are the helpful resources I referred to in completing this project. I appreciate these works, ideas, and source codes. Thanks
++ https://blog.tetrane.com/downloads/Tetrane_PatchGuard_Analysis_RS4_v1.01.pdf
++ https://blog.can.ac/2024/06/28/pgc-garbage-collecting-patchguard/
++ https://shhoya.github.io/windows_pgintro.html
