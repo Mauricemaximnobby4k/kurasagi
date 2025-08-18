@@ -4,7 +4,7 @@
 
 For more information, please refer to the `product` branch, which contains the PDF paper detailing the bypass.
 
-**If any BSOD appears which is related to `CRITICAL_STRUCTURE_CORRUPTION` (PatchGuard), please create issue with it!**
+**If any BSOD which is related to `CRITICAL_STRUCTURE_CORRUPTION` (PatchGuard) appears, please create issue with it!**
 
 ## Changelog
 
