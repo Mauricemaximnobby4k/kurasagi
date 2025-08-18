@@ -4,6 +4,8 @@
 
 For more information, please refer to the `product` branch, which contains the PDF paper detailing the bypass.
 
+**If any BSOD appears which is related to `CRITICAL_STRUCTURE_CORRUPTION` (PatchGuard), please create issue with it!**
+
 ## Changelog
 
 (2025/08/03) **Caution**: Upgraded to 26100.4652. for 26100.4351 version bypass, refer to commit `80650b9cb71855042659137ecd8936f8a9336a61`. <br>
